@@ -1,0 +1,1315 @@
+
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les temps de l'indicatif</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1a2e;
+  --paper: #faf9f6;
+  --accent: #e63946;
+  --gold: #f4a261;
+  --teal: #2a9d8f;
+  --sky: #457b9d;
+  --mist: #f0ede6;
+  --line: #e0dbd0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body { font-family:'DM Sans',sans-serif; background:var(--paper); color:var(--ink); min-height:100vh; }
+
+/* ── NOM SCREEN ── */
+#nom-screen {
+  position:fixed; inset:0; z-index:10000;
+  background:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+}
+.nom-card {
+  background:var(--paper); border-radius:20px;
+  padding:40px 36px; max-width:460px; width:100%;
+  text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.nom-flag { font-size:2.5rem; margin-bottom:8px; }
+.nom-card h2 { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:900; color:var(--ink); margin-bottom:6px; }
+.nom-card > p { color:#666; font-size:.9rem; margin-bottom:24px; }
+.nom-field { margin-bottom:14px; text-align:left; }
+.nom-field label { display:block; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--sky); margin-bottom:5px; }
+.nom-field input { width:100%; padding:11px 14px; border:2px solid var(--line); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.98rem; transition:border-color .15s; }
+.nom-field input:focus { outline:none; border-color:var(--sky); }
+.nom-code-row { display:flex; gap:8px; align-items:flex-end; margin-bottom:20px; }
+.nom-code-row .nom-field { flex:1; margin-bottom:0; }
+.nom-error { color:var(--accent); font-size:.83rem; margin-bottom:10px; display:none; min-height:20px; }
+.btn-nom { width:100%; padding:13px; background:var(--accent); color:white; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; transition:background .2s; }
+.btn-nom:hover { background:#c1121f; }
+.nom-divider { border:none; border-top:1px solid var(--line); margin:18px 0; }
+.nom-code-label { font-size:.78rem; color:#888; margin-bottom:14px; }
+
+/* ── HEADER ── */
+header { background:var(--ink); color:white; padding:22px 32px 18px; position:relative; overflow:hidden; }
+header::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; background:var(--accent); border-radius:50%; opacity:0.12; }
+.header-top { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.header-flag { font-size:1.4rem; margin-bottom:4px; }
+header h1 { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:900; letter-spacing:-0.5px; line-height:1.1; margin-bottom:3px; }
+header p { opacity:0.7; font-size:.85rem; font-weight:500; }
+#header-nom { font-size:.82rem; opacity:.9; font-weight:600; margin-top:5px; background:rgba(255,255,255,.1); padding:4px 10px; border-radius:20px; display:inline-block; }
+.header-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.header-timer { font-size:.82rem; opacity:.8; font-weight:600; font-variant-numeric:tabular-nums; }
+.header-score { font-size:.82rem; opacity:.8; }
+.progress-bar { height:4px; background:rgba(255,255,255,.15); margin-top:14px; border-radius:2px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--gold); border-radius:2px; transition:width .5s ease; width:0%; }
+
+/* ── TABS ── */
+.container { max-width:880px; margin:0 auto; padding:22px 16px; }
+.tabs { display:flex; gap:3px; flex-wrap:wrap; background:var(--mist); padding:5px; border-radius:14px; margin-bottom:26px; border:1px solid var(--line); }
+.tab-btn { flex:1; min-width:90px; padding:9px 10px; background:transparent; color:#888; border:none; border-radius:10px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.78rem; font-weight:600; transition:all .2s; white-space:nowrap; text-align:center; }
+.tab-btn.active { background:white; color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,.1); }
+.tab-btn.done { color:var(--teal); }
+.tab-btn.done.active { color:var(--ink); }
+.tab-btn.locked { color:#ccc; cursor:not-allowed; }
+
+/* ── PANEL ── */
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* ── TIMER PER SECCIÓ ── */
+.section-timer-bar {
+  background:white; border:1px solid var(--line); border-radius:10px;
+  padding:10px 16px; margin-bottom:16px;
+  display:flex; align-items:center; gap:12px;
+}
+.stimer-label { font-size:.82rem; color:#888; font-weight:600; }
+.stimer-clock { font-size:1.1rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); min-width:52px; }
+.stimer-clock.warning { color:var(--accent); }
+.stimer-bar-wrap { flex:1; height:6px; background:var(--mist); border-radius:3px; overflow:hidden; }
+.stimer-bar-fill { height:100%; background:var(--teal); border-radius:3px; transition:width 1s linear, background .5s; }
+.stimer-bar-fill.warning { background:var(--accent); }
+
+/* ── FICHE ── */
+.fiche { background:white; border:1px solid var(--line); border-radius:14px; padding:16px 20px; margin-bottom:20px; border-left:4px solid var(--sky); }
+.fiche-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none; }
+.fiche-locked-msg { font-size:.8rem; color:#aaa; font-style:italic; margin-top:6px; }
+.fiche-title { font-weight:700; color:var(--sky); font-size:.93rem; }
+.fiche-arrow { color:var(--sky); transition:transform .2s; font-size:.9rem; }
+.fiche-body { margin-top:12px; }
+.fiche-body p { font-size:.87rem; line-height:1.6; margin-bottom:8px; color:#444; }
+
+/* ── EXO ── */
+.section-label { font-family:'Playfair Display',serif; font-size:1.45rem; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+.section-num { width:34px; height:34px; background:var(--accent); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'DM Sans',sans-serif; font-size:.9rem; font-weight:700; flex-shrink:0; }
+.exo { background:white; border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:14px; }
+.exo-title { font-weight:700; font-size:.85rem; text-transform:uppercase; letter-spacing:.8px; color:var(--sky); margin-bottom:5px; }
+.consigne { font-size:.86rem; color:#666; font-style:italic; margin-bottom:12px; }
+
+/* Progress per secció */
+.exo-progress { font-size:.78rem; color:#888; margin-bottom:10px; }
+.exo-progress span { font-weight:700; color:var(--sky); }
+
+/* Ordre */
+.words-pool { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.word-chip { padding:5px 11px; border:2px solid var(--sky); color:var(--sky); background:white; border-radius:20px; cursor:pointer; font-size:.86rem; font-weight:600; transition:all .15s; touch-action:manipulation; }
+.word-chip:hover:not(:disabled) { background:var(--sky); color:white; }
+.word-chip:disabled { opacity:.3; cursor:not-allowed; }
+.word-chip.distractor { border-color:#adb5bd; color:#adb5bd; }
+.drop-zone { min-height:44px; padding:8px 10px; background:var(--mist); border:2px dashed var(--teal); border-radius:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.drop-zone .word-chip { border-color:var(--teal); color:var(--teal); background:white; }
+.drop-zone .word-chip:hover { background:var(--teal); color:white; }
+
+/* Conjugaison */
+.conj-row { display:grid; grid-template-columns:1fr auto auto auto; align-items:center; gap:8px; margin-bottom:10px; }
+.conj-label { font-size:.88rem; color:#555; }
+.conj-label b { color:var(--ink); }
+.conj-input { padding:8px 12px; border:2px solid var(--line); border-radius:8px; font-size:.93rem; font-family:'DM Sans',sans-serif; width:100%; max-width:200px; transition:border-color .15s; }
+.conj-input:focus { outline:none; border-color:var(--sky); }
+.conj-input.ok { border-color:var(--teal); background:#f0fdf4; }
+.conj-input.ko { border-color:var(--accent); background:#fff0f0; }
+.conj-fb { font-size:1.1rem; width:24px; text-align:center; }
+.speak-btn { background:transparent; border:1px solid var(--sky); color:var(--sky); width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:.8rem; display:inline-flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0; }
+.speak-btn:hover { background:var(--sky); color:white; }
+
+/* Rédaction */
+textarea { width:100%; min-height:100px; padding:11px; border:2px solid var(--line); border-radius:10px; font-size:.93rem; font-family:'DM Sans',sans-serif; resize:vertical; transition:border-color .15s; }
+textarea:focus { outline:none; border-color:var(--sky); }
+.word-count { font-size:.78rem; color:#888; margin-top:4px; }
+.word-count.ok { color:var(--teal); font-weight:600; }
+
+/* Actions */
+.actions { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; align-items:center; }
+.btn-validate { padding:11px 26px; background:var(--accent); color:white; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer; transition:background .2s; }
+.btn-validate:hover { background:#c1121f; }
+.btn-hint { padding:9px 16px; background:#fff8ee; color:#b45309; border:2px solid var(--gold); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-hint:hover:not(:disabled) { background:var(--gold); color:white; }
+.btn-hint:disabled { opacity:.5; cursor:not-allowed; }
+.hint-box { display:none; margin-top:12px; padding:13px 16px; background:#fff8ee; border-left:4px solid var(--gold); border-radius:8px; font-size:.88rem; color:#7a4500; line-height:1.6; }
+.hint-box.show { display:block; }
+.resultat { display:none; margin-top:14px; padding:13px 16px; border-radius:10px; font-weight:600; font-size:.92rem; }
+.resultat.success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; display:block; }
+.resultat.fail { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; display:block; }
+.correction-hint { margin-top:6px; padding:6px 10px; background:#fff8ee; border-left:3px solid var(--gold); border-radius:4px; font-size:.82rem; color:#7a4500; }
+
+/* Feedback detallat */
+.fb-detail { font-size:.8rem; color:#555; font-weight:400; margin-top:4px; }
+
+/* Toast */
+.toast { position:fixed; top:80px; left:50%; transform:translateX(-50%) translateY(-20px); background:var(--ink); color:white; padding:11px 20px; border-radius:30px; font-weight:600; font-size:.9rem; opacity:0; transition:all .3s; z-index:9999; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,.2); max-width:90vw; text-align:center; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.ok { background:var(--teal); }
+.toast.ko { background:var(--accent); }
+
+/* Accent bar */
+.accent-bar { position:fixed; bottom:-60px; left:50%; transform:translateX(-50%); background:white; border:1px solid var(--line); border-radius:30px; padding:5px 8px; box-shadow:0 4px 16px rgba(0,0,0,.15); display:flex; gap:3px; transition:bottom .25s; z-index:998; flex-wrap:wrap; max-width:98vw; justify-content:center; }
+.accent-bar.show { bottom:14px; }
+.accent-bar button { background:var(--mist); color:var(--ink); border:none; width:32px; height:32px; border-radius:50%; font-size:.9rem; font-weight:700; cursor:pointer; transition:background .15s; touch-action:manipulation; }
+.accent-bar button:hover { background:var(--sky); color:white; }
+
+/* Oral */
+.oral-player { background:linear-gradient(135deg, var(--ink), var(--sky)); color:white; border-radius:14px; padding:20px; margin-bottom:18px; }
+.oral-player h3 { font-family:'Playfair Display',serif; margin-bottom:12px; }
+.oral-wave { display:flex; gap:3px; align-items:center; height:38px; margin:10px 0; }
+.oral-bar { width:4px; background:rgba(255,255,255,.4); border-radius:2px; min-height:4px; }
+.oral-wave.playing .oral-bar { animation:barPulse .5s ease-in-out infinite alternate; }
+.oral-wave.playing .oral-bar:nth-child(3n) { animation-duration:.7s; }
+.oral-wave.playing .oral-bar:nth-child(3n+1) { animation-duration:.4s; animation-direction:alternate-reverse; }
+@keyframes barPulse { 0%{height:4px} 100%{height:30px} }
+.oral-controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.oral-play-btn { padding:9px 18px; background:white; color:var(--ink); border:none; border-radius:30px; font-family:'DM Sans',sans-serif; font-weight:700; cursor:pointer; font-size:.9rem; transition:background .15s; }
+.oral-play-btn:hover { background:#f0f4f8; }
+.oral-stop-btn { padding:9px 14px; background:rgba(255,255,255,.15); color:white; border:2px solid rgba(255,255,255,.35); border-radius:30px; font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600; cursor:pointer; transition:background .15s; }
+.oral-stop-btn:hover { background:rgba(255,255,255,.25); }
+.oral-speed { background:rgba(255,255,255,.15); color:white; border:2px solid rgba(255,255,255,.3); border-radius:20px; padding:7px 10px; font-size:.8rem; cursor:pointer; }
+.oral-speed option { color:var(--ink); background:white; }
+.oral-tip { font-size:.78rem; opacity:.7; font-style:italic; margin-top:8px; }
+.oral-transcript-btn { background:white; border:2px solid var(--line); padding:9px 14px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:600; cursor:pointer; display:block; width:100%; text-align:left; margin-bottom:10px; transition:background .15s; }
+.oral-transcript-btn:hover:not(:disabled) { background:var(--mist); }
+.oral-transcript-btn:disabled { opacity:.45; cursor:not-allowed; }
+.oral-transcript { background:var(--mist); border-left:4px solid var(--sky); border-radius:8px; padding:14px 16px; line-height:1.8; font-size:.88rem; }
+.oral-transcript p { margin-bottom:10px; }
+.oral-transcript p:last-child { margin-bottom:0; }
+.para-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px; }
+.oral-qcm { margin-bottom:12px; }
+.oral-q-text { font-size:.88rem; font-weight:600; margin-bottom:7px; }
+.oral-opts { display:flex; flex-direction:column; gap:5px; }
+.oral-opt { padding:7px 12px; background:var(--mist); border:2px solid var(--line); border-radius:8px; cursor:pointer; font-size:.86rem; transition:all .15s; text-align:left; font-family:'DM Sans',sans-serif; touch-action:manipulation; }
+.oral-opt:hover { border-color:var(--sky); background:white; }
+.oral-opt.sel { border-color:var(--sky); background:#eaf4fc; }
+.oral-opt.ok { border-color:var(--teal); background:#f0fdf4; color:#155724; font-weight:600; }
+.oral-opt.ko { border-color:var(--accent); background:#fff0f0; color:#721c24; }
+.oral-fb { font-size:.8rem; margin-top:3px; font-style:italic; }
+.oral-fb.ok { color:var(--teal); }
+.oral-fb.ko { color:var(--accent); }
+
+/* Félicitations */
+.congrats { text-align:center; padding:36px 24px; background:linear-gradient(135deg, #1a1a2e, var(--sky)); color:white; border-radius:16px; margin-top:8px; }
+.congrats h2 { font-family:'Playfair Display',serif; font-size:2rem; margin-bottom:8px; }
+.congrats p { opacity:.85; font-size:.93rem; }
+.medals { font-size:2rem; letter-spacing:6px; margin:12px 0; }
+
+/* Resum de notes */
+.summary-table { width:100%; border-collapse:collapse; margin:16px 0; font-size:.88rem; text-align:left; }
+.summary-table th { background:rgba(255,255,255,.15); padding:8px 12px; }
+.summary-table td { padding:7px 12px; border-top:1px solid rgba(255,255,255,.1); }
+.summary-table .ok-cell { color:#a8edca; font-weight:700; }
+.summary-table .ko-cell { color:#fca5a5; }
+.summary-global { font-size:1.1rem; font-weight:700; margin-top:8px; }
+
+/* PDF button */
+.btn-pdf { padding:11px 22px; background:var(--teal); color:white; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.92rem; font-weight:700; cursor:pointer; transition:background .2s; }
+.btn-pdf:hover { background:#21867a; }
+
+/* Codi professor */
+.teacher-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.12); padding:4px 12px; border-radius:20px; font-size:.78rem; opacity:.8; }
+
+/* Print header */
+.print-header { display:none; font-size:.88rem; color:#444; border-bottom:1px solid #ccc; padding-bottom:6px; margin-bottom:14px; }
+
+/* ── RESPONSIVE MOBILE ── */
+@media(max-width:600px){
+  header { padding:16px 16px 14px; }
+  header h1 { font-size:1.4rem; }
+  .tab-btn { font-size:.7rem; padding:7px 6px; min-width:70px; }
+  .conj-row { grid-template-columns:1fr; gap:4px; }
+  .conj-input { max-width:100%; }
+  .container { padding:16px 12px; }
+  .exo { padding:14px; }
+  .nom-card { padding:28px 20px; }
+}
+
+/* ── PRINT ── */
+@media print {
+  #nom-screen, .tabs, .accent-bar, .toast,
+  .btn-validate, .btn-hint, .btn-pdf,
+  .fiche-arrow, .oral-controls, .oral-play-btn,
+  .oral-stop-btn, .oral-speed, .oral-transcript-btn,
+  .speak-btn, .section-timer-bar, button { display:none !important; }
+  body { background:white !important; font-size:10.5pt; }
+  .container { max-width:100%; padding:0 6mm; }
+  header { padding:8px 14px; }
+  header h1 { font-size:1.3rem; }
+  .panel { display:block !important; page-break-after:always; }
+  .panel:last-child { page-break-after:avoid; }
+  .exo { border:1px solid #ccc; margin-bottom:8px; padding:10px; page-break-inside:avoid; }
+  .fiche { page-break-inside:avoid; }
+  .fiche-body { display:block !important; }
+  .conj-input { border:none; border-bottom:1px solid #999; background:transparent !important; }
+  .conj-input.ok { border-bottom:2px solid #2a9d8f; }
+  .conj-input.ko { border-bottom:2px solid #e63946; }
+  .resultat { display:block !important; }
+  .drop-zone { border:1px dashed #aaa; min-height:28px; }
+  .word-chip { border:1px solid #aaa; font-size:.8rem; padding:3px 8px; }
+  textarea { border:1px solid #ccc; resize:none; min-height:70px; }
+  .progress-bar { display:none; }
+  .print-header { display:block !important; }
+  .congrats { background:#1a1a2e !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .summary-table th { background:rgba(0,0,0,.1) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- NOM SCREEN -->
+<div id="nom-screen">
+  <div class="nom-card">
+    <div class="nom-flag">🇫🇷</div>
+    <h2>Les temps de l'indicatif</h2>
+    <p>Introdueix el teu nom i cognoms per començar. El professor pot protegir l'activitat amb un codi.</p>
+    <div class="nom-field">
+      <label>Nom</label>
+      <input type="text" id="inp-nom" placeholder="Ex: Martí" autocomplete="given-name">
+    </div>
+    <div class="nom-field">
+      <label>Cognoms</label>
+      <input type="text" id="inp-cognom" placeholder="Ex: Garcia Puig" autocomplete="family-name">
+    </div>
+    <hr class="nom-divider">
+    <p class="nom-code-label">🔒 Codi d'accés (si el professor n'ha establert un)</p>
+    <div class="nom-field">
+      <label>Codi (opcional)</label>
+      <input type="password" id="inp-codi" placeholder="Deixa buit si no n'hi ha">
+    </div>
+    <div class="nom-error" id="nom-error"></div>
+    <button class="btn-nom" onclick="confirmarNom()">Començar l'activitat ▶</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="accent-bar" id="accentBar"></div>
+
+<header>
+  <div class="header-top">
+    <div>
+      <div class="header-flag">🇫🇷</div>
+      <h1>Les temps de l'indicatif</h1>
+      <p>Présent · Imparfait · Passé composé · Futur proche · Futur simple</p>
+      <div id="header-nom" style="display:none"></div>
+    </div>
+    <div class="header-right">
+      <div class="header-timer" id="global-timer">⏱ 00:00</div>
+      <div class="header-score" id="global-score"></div>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</header>
+
+<div class="container">
+  <div class="print-header" id="print-header"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="panels"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIGURACIÓ
+══════════════════════════════════════════ */
+const CODI_PROFESSOR = "frances2025"; // Canvia aquest codi!
+const SEUIL = 0.70;
+const TEMPS_PER_SECCIO = 15 * 60; // 15 minuts en segons
+const ORDRE = ["present","imparfait","passecompose","futurproche","futur","oral"];
+
+/* ══════════════════════════════════════════
+   DATA — EXERCICIS (corregit l'error de l'imparfait)
+══════════════════════════════════════════ */
+const DATA = {
+  present: {
+    num:1, titre:"Le présent", emoji:"⚡",
+    theorie:{
+      resume:"Action <b>maintenant</b>, habitude ou vérité générale.",
+      terminaisons:"-e · -es · -e · -ons · -ez · -ent (verbes -ER)",
+      exemple:"Je parle — tu parles — il parle"
+    },
+    phrases:[
+      { mots:["Je","mange","à","la cantine","tous les jours."], distracteurs:["tu","à la maison","le vendredi","parfois"], correct:"Je mange à la cantine tous les jours." },
+      { mots:["Nous","habitons","dans","un grand appartement","à","Paris."], distracteurs:["ils","une maison","à Lyon"], correct:"Nous habitons dans un grand appartement à Paris." },
+      { mots:["Elle","n'aime","plus","jouer","aux jeux vidéo."], distracteurs:["il","jamais","regarder","la télé"], correct:"Elle n'aime plus jouer aux jeux vidéo." }
+    ],
+    conj:[
+      {verbe:"parler",  pronom:"tu",   rep:["parles"],       explication:"Verbe -ER, 2e pers. sing. → tu parle<b>s</b>"},
+      {verbe:"finir",   pronom:"nous", rep:["finissons"],    explication:"Verbe -IR, 1e pers. pl. → nous finiss<b>ons</b>"},
+      {verbe:"être",    pronom:"vous", rep:["êtes","etes"],  explication:"Irrégulier : être → vous <b>êtes</b>"},
+      {verbe:"avoir",   pronom:"ils",  rep:["ont"],          explication:"Irrégulier : avoir → ils <b>ont</b>"},
+      {verbe:"aller",   pronom:"je",   rep:["vais"],         explication:"Irrégulier : aller → je <b>vais</b>"}
+    ],
+    redacConsigne:"Présente-toi en 4 phrases au présent (nom, âge, ville, goûts…). Minimum 25 mots.",
+    redacPlaceholder:"Je m'appelle…",
+    indice:"<b>Terminaisons -ER :</b> je <b>-e</b>, tu <b>-es</b>, il/elle <b>-e</b>, nous <b>-ons</b>, vous <b>-ez</b>, ils <b>-ent</b>. Verbes irréguliers : être → suis/es/est, avoir → ai/as/a, aller → vais/vas/va."
+  },
+  imparfait: {
+    num:2, titre:"L'imparfait", emoji:"🕰",
+    theorie:{
+      resume:"Habitude ou <b>description dans le passé</b>.",
+      terminaisons:"-ais · -ais · -ait · -ions · -iez · -aient",
+      exemple:"Je parlais — tu parlais — il parlait"
+    },
+    phrases:[
+      { mots:["Quand","j'étais","petit,","je","jouais","au parc","avec","mes amis."], distracteurs:["grande","au stade","tous les jours"], correct:"Quand j'étais petit, je jouais au parc avec mes amis." },
+      { mots:["Nous","n'habitions","plus","dans","cette ville."], distracteurs:["ils","jamais","ici","autrefois"], correct:"Nous n'habitions plus dans cette ville." },
+      { mots:["Il","ne","regardait","jamais","la télé","le matin."], distracteurs:["elle","regardais","souvent","le soir"], correct:"Il ne regardait jamais la télé le matin." }
+    ],
+    conj:[
+      {verbe:"parler",  pronom:"je",   rep:["parlais"],           explication:"Radical 'nous' au présent (parl-) + <b>-ais</b>"},
+      {verbe:"finir",   pronom:"nous", rep:["finissions"],        explication:"Radical 'nous' au présent (finiss-) + <b>-ions</b>"},
+      {verbe:"être",    pronom:"tu",   rep:["étais","etais"],     explication:"Seule exception : être → tu <b>étais</b>"},
+      {verbe:"avoir",   pronom:"il",   rep:["avait"],             explication:"Radical av- + <b>-ait</b>"},
+      {verbe:"aller",   pronom:"vous", rep:["alliez"],            explication:"Radical all- + <b>-iez</b>"}
+    ],
+    redacConsigne:"Décris ta vie quand tu avais 8 ans : où tu habitais, ce que tu faisais… Minimum 25 mots, tout à l'imparfait.",
+    redacPlaceholder:"Quand j'avais 8 ans, j'habitais…",
+    indice:"<b>Radical :</b> prenez la forme « nous » au présent, supprimez « -ons » → ajouter <b>-ais, -ais, -ait, -ions, -iez, -aient</b>. Seule exception : être → j'<b>étais</b>."
+  },
+  passecompose: {
+    num:3, titre:"Le passé composé", emoji:"📜",
+    theorie:{
+      resume:"Action <b>terminée</b> dans le passé.",
+      terminaisons:"AVOIR/ÊTRE au présent + participe passé (-ER→é · -IR→i)",
+      exemple:"J'ai parlé — elle est allée"
+    },
+    phrases:[
+      { mots:["Hier","nous","avons","visité","un musée."], distracteurs:["demain","ils","vu","un film"], correct:"Hier nous avons visité un musée." },
+      { mots:["Elle","est","allée","au cinéma","mais","elle","n'a","pas","aimé","le film."], distracteurs:["il","parti","au théâtre","beaucoup","adoré"], correct:"Elle est allée au cinéma mais elle n'a pas aimé le film." },
+      { mots:["Tu","n'as","pas","encore","fini","ton","assiette."], distracteurs:["elle","jamais","bu","votre"], correct:"Tu n'as pas encore fini ton assiette." }
+    ],
+    conj:[
+      {verbe:"parler",  pronom:"je",   rep:["ai parlé","ai parle"],      explication:"Avoir (ai) + participe passé de parler (<b>parlé</b>)"},
+      {verbe:"aller",   pronom:"elle", rep:["est allée","est allee"],    explication:"Aller se conjugue avec ÊTRE → elle <b>est allée</b> (accord -e)"},
+      {verbe:"finir",   pronom:"nous", rep:["avons fini"],               explication:"Avoir (avons) + participe passé de finir (<b>fini</b>)"},
+      {verbe:"être",    pronom:"tu",   rep:["as été","as ete"],          explication:"Avoir (as) + participe passé de être (<b>été</b>)"},
+      {verbe:"avoir",   pronom:"ils",  rep:["ont eu"],                   explication:"Avoir (ont) + participe passé de avoir (<b>eu</b>)"}
+    ],
+    redacConsigne:"Raconte ce que tu as fait le week-end dernier. Minimum 25 mots, tout au passé composé.",
+    redacPlaceholder:"Samedi dernier, je me suis levé(e)…",
+    indice:"<b>Avec AVOIR :</b> j'ai parlé, tu as fini… <b>Avec ÊTRE</b> (verbes de mouvement + réfléchis) : je suis allé(e), tu es venu(e)… Accord du participe avec ÊTRE : elle est allé<b>e</b>."
+  },
+  futurproche: {
+    num:4, titre:"Le futur proche", emoji:"🔜",
+    theorie:{
+      resume:"Action <b>imminente ou planifiée</b>.",
+      terminaisons:"ALLER au présent + infinitif",
+      exemple:"Je vais parler — tu vas finir — il va être"
+    },
+    phrases:[
+      { mots:["Je","vais","manger","au restaurant","ce soir."], distracteurs:["tu vas","aller","à la cantine","demain"], correct:"Je vais manger au restaurant ce soir." },
+      { mots:["Nous","n'allons","plus","habiter","ici."], distracteurs:["ils","jamais","rester","là-bas"], correct:"Nous n'allons plus habiter ici." },
+      { mots:["Il","ne","va","pas","pleuvoir","mais","il","va","faire","froid."], distracteurs:["elle","pas encore","neiger","donc","vais","chaud"], correct:"Il ne va pas pleuvoir mais il va faire froid." }
+    ],
+    conj:[
+      {verbe:"parler", pronom:"tu",   rep:["vas parler"],    explication:"Aller au présent (vas) + infinitif (<b>parler</b>)"},
+      {verbe:"finir",  pronom:"nous", rep:["allons finir"],  explication:"Aller au présent (allons) + infinitif (<b>finir</b>)"},
+      {verbe:"être",   pronom:"il",   rep:["va être","va etre"],  explication:"Aller au présent (va) + infinitif (<b>être</b>)"},
+      {verbe:"avoir",  pronom:"je",   rep:["vais avoir"],    explication:"Aller au présent (vais) + infinitif (<b>avoir</b>)"},
+      {verbe:"faire",  pronom:"vous", rep:["allez faire"],   explication:"Aller au présent (allez) + infinitif (<b>faire</b>)"}
+    ],
+    redacConsigne:"Dis ce que tu vas faire ce week-end. Minimum 25 mots, tout au futur proche.",
+    redacPlaceholder:"Ce week-end, je vais…",
+    indice:"<b>ALLER au présent :</b> je <b>vais</b>, tu <b>vas</b>, il <b>va</b>, nous <b>allons</b>, vous <b>allez</b>, ils <b>vont</b> + <b>infinitif du verbe</b>. Négation : ne…pas encadre ALLER : Je <b>ne</b> vais <b>pas</b> partir."
+  },
+  futur: {
+    num:5, titre:"Le futur simple", emoji:"🔭",
+    theorie:{
+      resume:"Action <b>future</b>, promesse, prédiction.",
+      terminaisons:"-ai · -as · -a · -ons · -ez · -ont (infinitif + terminaison)",
+      exemple:"Je parlerai — tu finiras — il sera"
+    },
+    phrases:[
+      { mots:["Demain","je","partirai","en vacances","et","je","verrai","la mer."], distracteurs:["hier","tu","partiras","au travail","mais","elle"], correct:"Demain je partirai en vacances et je verrai la mer." },
+      { mots:["Tu","ne","seras","pas","seul","parce que","tes amis","seront","là."], distracteurs:["il","jamais","sera","plus","ta famille"], correct:"Tu ne seras pas seul parce que tes amis seront là." },
+      { mots:["Vous","ne","serez","pas","fatigués","si","vous","dormez","assez."], distracteurs:["ils","seront","très","épuisés","mais","peu"], correct:"Vous ne serez pas fatigués si vous dormez assez." }
+    ],
+    conj:[
+      {verbe:"parler", pronom:"je",   rep:["parlerai"],   explication:"Infinitif (parler) + <b>-ai</b> → parler<b>ai</b>"},
+      {verbe:"finir",  pronom:"tu",   rep:["finiras"],    explication:"Infinitif (finir) + <b>-as</b> → finir<b>as</b>"},
+      {verbe:"être",   pronom:"il",   rep:["sera"],       explication:"Irrégulier : être → radical <b>ser-</b> + a → <b>sera</b>"},
+      {verbe:"avoir",  pronom:"nous", rep:["aurons"],     explication:"Irrégulier : avoir → radical <b>aur-</b> + ons → <b>aurons</b>"},
+      {verbe:"aller",  pronom:"vous", rep:["irez"],       explication:"Irrégulier : aller → radical <b>ir-</b> + ez → <b>irez</b>"}
+    ],
+    redacConsigne:"Décris tes projets pour l'été prochain. Minimum 25 mots, tout au futur simple.",
+    redacPlaceholder:"L'été prochain, je voyagerai…",
+    indice:"<b>Terminaisons :</b> -<b>ai</b>, -<b>as</b>, -<b>a</b>, -<b>ons</b>, -<b>ez</b>, -<b>ont</b> ajoutées à l'infinitif (-re → enlever le e). Irréguliers : être→<b>ser</b>-, avoir→<b>aur</b>-, aller→<b>ir</b>-, faire→<b>fer</b>-, voir→<b>verr</b>-."
+  }
+};
+
+const ORAL_PARAS = [
+  {label:"§1 Présent", color:"var(--sky)", text:"Lucas a quinze ans. Il est élève au lycée. Il habite avec sa famille dans un appartement en ville. Tous les matins, il mange des céréales et boit du jus d'orange. Après les cours, il joue au basket avec ses amis."},
+  {label:"§2 Imparfait", color:"var(--teal)", text:"Quand Lucas était petit, il habitait dans une petite maison à la campagne. Il avait un chien qui s'appelait Max. Chaque soir, il regardait des dessins animés avec sa sœur. Il était très heureux."},
+  {label:"§3 Passé composé", color:"#b45309", text:"Samedi dernier, Lucas s'est levé à neuf heures. Il a mangé des crêpes. L'après-midi, il est allé au cinéma avec son ami Paul. Ils ont regardé un film d'action."},
+  {label:"§4 Futur proche", color:"#9b59b6", text:"Demain, Lucas va avoir un contrôle de maths. Ce soir, il va étudier dans sa chambre. Sa mère va l'aider avec les exercices difficiles."},
+  {label:"§5 Futur simple", color:"var(--accent)", text:"L'été prochain, Lucas passera ses vacances à la mer. Il ira en Bretagne avec ses parents. Ils nageront et visiteront les marchés. Lucas prendra beaucoup de photos."}
+];
+
+const ORAL_QS = [
+  {id:"o1", text:"Où habite Lucas ?", opts:["Dans une maison à la campagne","Dans un appartement en ville","Dans une villa à la mer","Chez ses grands-parents"], correct:1, explication:"Il habite avec sa famille dans un appartement en ville."},
+  {id:"o2", text:"Que faisait Lucas chaque soir quand il était petit ?", opts:["Il jouait au basket","Il lisait des livres","Il regardait des dessins animés","Il faisait ses devoirs"], correct:2, explication:"Chaque soir, il regardait des dessins animés avec sa sœur."},
+  {id:"o3", text:"Où est allé Lucas samedi dernier ?", opts:["Au stade","Au musée","À la plage","Au cinéma"], correct:3, explication:"L'après-midi, il est allé au cinéma avec son ami Paul."},
+  {id:"o4", text:"Qu'est-ce que Lucas va faire ce soir ?", opts:["Jouer aux jeux vidéo","Étudier dans sa chambre","Manger une pizza","Téléphoner à Paul"], correct:1, explication:"Ce soir, il va étudier dans sa chambre."},
+  {id:"o5", text:"Où ira Lucas l'été prochain ?", opts:["En Espagne","En Bretagne","À Paris","En Italie"], correct:1, explication:"Il ira en Bretagne avec ses parents."}
+];
+
+/* ══════════════════════════════════════════
+   ESTAT GLOBAL
+══════════════════════════════════════════ */
+const etat = {
+  sections: {
+    present:      {unlocked:true,  done:false, score:0, total:0, timeSpent:0, hintUsed:false},
+    imparfait:    {unlocked:false, done:false, score:0, total:0, timeSpent:0, hintUsed:false},
+    passecompose: {unlocked:false, done:false, score:0, total:0, timeSpent:0, hintUsed:false},
+    futurproche:  {unlocked:false, done:false, score:0, total:0, timeSpent:0, hintUsed:false},
+    futur:        {unlocked:false, done:false, score:0, total:0, timeSpent:0, hintUsed:false},
+    oral:         {unlocked:false, done:false, score:0, total:0, timeSpent:0, hintUsed:false}
+  },
+  oralAnswers: {},
+  oralAttempted: false,
+  currentSection: 'present',
+  startTime: null,
+  globalSeconds: 0
+};
+
+// Section timers
+const sectionTimers = {};
+let globalTimerInterval = null;
+
+/* ══════════════════════════════════════════
+   NOM SCREEN
+══════════════════════════════════════════ */
+let studentNom = '', studentCognom = '';
+
+function confirmarNom(){
+  const n = document.getElementById('inp-nom').value.trim();
+  const c = document.getElementById('inp-cognom').value.trim();
+  const codi = document.getElementById('inp-codi').value.trim();
+  const errEl = document.getElementById('nom-error');
+
+  if(!n || !c){
+    errEl.textContent = '⚠ Cal omplir el nom i els cognoms.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(codi && codi !== CODI_PROFESSOR){
+    errEl.textContent = '❌ Codi incorrecte. Demana\'l al professor.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!codi && CODI_PROFESSOR){
+    // Codi obligatori? Canvia aquesta condició si vols fer-lo opcional sempre
+    // Aquí el fem opcional (si no s'introdueix, passa igualment)
+  }
+
+  studentNom = n;
+  studentCognom = c;
+  document.getElementById('nom-screen').style.display = 'none';
+  const nomEl = document.getElementById('header-nom');
+  nomEl.textContent = '👤 ' + n + ' ' + c;
+  nomEl.style.display = 'inline-block';
+  document.getElementById('print-header').innerHTML =
+    '<b>Alumne/a:</b> ' + n + ' ' + c +
+    ' &nbsp;|&nbsp; <b>Data:</b> ' + new Date().toLocaleDateString('ca-ES') +
+    ' &nbsp;|&nbsp; <b>Activitat:</b> Les temps de l\'indicatif';
+
+  // Start global timer
+  etat.startTime = Date.now();
+  globalTimerInterval = setInterval(tickGlobal, 1000);
+  // Start timer for first section
+  startSectionTimer('present');
+  // Try restore from localStorage
+  restoreProgress();
+}
+
+['inp-nom','inp-cognom','inp-codi'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => { if(e.key==='Enter') confirmarNom(); });
+});
+
+/* ══════════════════════════════════════════
+   TIMERS
+══════════════════════════════════════════ */
+function tickGlobal(){
+  etat.globalSeconds++;
+  const m = Math.floor(etat.globalSeconds/60).toString().padStart(2,'0');
+  const s = (etat.globalSeconds%60).toString().padStart(2,'0');
+  document.getElementById('global-timer').textContent = '⏱ ' + m + ':' + s;
+  saveProgress();
+}
+
+function startSectionTimer(key){
+  if(sectionTimers[key]) return;
+  let elapsed = etat.sections[key].timeSpent || 0;
+  sectionTimers[key] = setInterval(()=>{
+    elapsed++;
+    etat.sections[key].timeSpent = elapsed;
+    updateSectionTimerUI(key, elapsed);
+  }, 1000);
+}
+
+function stopSectionTimer(key){
+  if(sectionTimers[key]){ clearInterval(sectionTimers[key]); delete sectionTimers[key]; }
+}
+
+function updateSectionTimerUI(key, elapsed){
+  const clock = document.getElementById(`stimer-clock-${key}`);
+  const fill  = document.getElementById(`stimer-fill-${key}`);
+  if(!clock || !fill) return;
+  const remaining = Math.max(0, TEMPS_PER_SECCIO - elapsed);
+  const m = Math.floor(remaining/60).toString().padStart(2,'0');
+  const s = (remaining%60).toString().padStart(2,'0');
+  clock.textContent = m + ':' + s;
+  const pct = Math.min(100, (elapsed / TEMPS_PER_SECCIO) * 100);
+  fill.style.width = pct + '%';
+  const warn = remaining < 120;
+  clock.className = 'stimer-clock' + (warn ? ' warning' : '');
+  fill.className = 'stimer-bar-fill' + (warn ? ' warning' : '');
+  if(remaining === 120) toast('⏰ Queden 2 minuts per a aquesta secció!', 'ko');
+}
+
+/* ══════════════════════════════════════════
+   LOCAL STORAGE (guardar progrés)
+══════════════════════════════════════════ */
+const LS_KEY = 'temps-francais-v2';
+
+function saveProgress(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      nom: studentNom, cognom: studentCognom,
+      globalSeconds: etat.globalSeconds,
+      sections: etat.sections,
+      oralAnswers: etat.oralAnswers,
+      oralAttempted: etat.oralAttempted,
+      savedAt: Date.now()
+    }));
+  } catch(e){}
+}
+
+function restoreProgress(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    // Only restore if same student (same session day, within 2h)
+    if(saved.nom !== studentNom || saved.cognom !== studentCognom) return;
+    if(Date.now() - saved.savedAt > 2*60*60*1000) return;
+    // Restore
+    etat.globalSeconds = saved.globalSeconds || 0;
+    Object.keys(saved.sections).forEach(k => {
+      if(etat.sections[k]) Object.assign(etat.sections[k], saved.sections[k]);
+    });
+    etat.oralAnswers = saved.oralAnswers || {};
+    etat.oralAttempted = saved.oralAttempted || false;
+    buildTabs();
+    updateProgress();
+    updateGlobalScore();
+    toast('🔄 Progrés restaurat de la sessió anterior.', 'ok');
+  } catch(e){}
+}
+
+/* ══════════════════════════════════════════
+   AUDIO
+══════════════════════════════════════════ */
+let audioCtx=null;
+function ensureAudio(){ if(!audioCtx) try{audioCtx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){} }
+function beep(f,d,t='sine',v=0.15){
+  ensureAudio(); if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.frequency.value=f; o.type=t;
+  o.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(v,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d);
+  o.start(); o.stop(audioCtx.currentTime+d);
+}
+function soundOk(){ beep(880,.1); setTimeout(()=>beep(1320,.12),100); }
+function soundKo(){ beep(220,.18,'square',.12); }
+function soundUnlock(){ [523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.14),i*110)); }
+
+/* ══════════════════════════════════════════
+   VOICE
+══════════════════════════════════════════ */
+let bestVoice=null;
+function pickVoice(){
+  const all=speechSynthesis.getVoices();
+  if(!all.length) return;
+  const fr=all.filter(v=>/^fr/i.test(v.lang));
+  const priorities=[
+    v=>/DeniseNeural|HenriNeural/i.test(v.name),
+    v=>/^Google/i.test(v.name)&&/^fr/i.test(v.lang),
+    v=>/^fr-FR/i.test(v.lang)&&!v.localService,
+    v=>/^fr-FR/i.test(v.lang),
+    v=>/^fr/i.test(v.lang)
+  ];
+  for(const t of priorities){ const m=fr.find(t); if(m){bestVoice=m;return;} }
+}
+if('speechSynthesis' in window){
+  speechSynthesis.getVoices().length && pickVoice();
+  speechSynthesis.addEventListener('voiceschanged',pickVoice);
+}
+function speak(text, rate=0.85){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='fr-FR'; u.rate=rate; u.pitch=1.02;
+  if(bestVoice) u.voice=bestVoice;
+  speechSynthesis.speak(u);
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+let toastTimer=null;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.className='toast',3000);
+}
+
+/* ══════════════════════════════════════════
+   ACCENT BAR
+══════════════════════════════════════════ */
+function setupAccentBar(){
+  const chars=['à','â','é','è','ê','ë','î','ï','ô','ù','û','ü','ç','œ','æ'];
+  const bar=document.getElementById('accentBar');
+  chars.forEach(c=>{
+    const b=document.createElement('button');
+    b.textContent=c;
+    b.addEventListener('click',()=>{
+      const el=document.activeElement;
+      if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')){
+        const s=el.selectionStart, e=el.selectionEnd;
+        el.value=el.value.slice(0,s)+c+el.value.slice(e);
+        el.selectionStart=el.selectionEnd=s+1;
+        el.dispatchEvent(new Event('input'));
+      }
+    });
+    bar.appendChild(b);
+  });
+  document.addEventListener('focusin',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') bar.classList.add('show');
+  });
+  document.addEventListener('focusout',()=>setTimeout(()=>{
+    if(!document.activeElement||!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) bar.classList.remove('show');
+  },200));
+}
+
+/* ══════════════════════════════════════════
+   PROGRESS & TABS
+══════════════════════════════════════════ */
+function updateProgress(){
+  const keys=["present","imparfait","passecompose","futurproche","futur"];
+  const done=keys.filter(k=>etat.sections[k].done).length;
+  document.getElementById('progressFill').style.width=(done/keys.length*100)+'%';
+}
+
+function updateGlobalScore(){
+  const keys=["present","imparfait","passecompose","futurproche","futur"];
+  const totalScore = keys.reduce((a,k)=>a+etat.sections[k].score,0);
+  const totalQ = keys.reduce((a,k)=>a+etat.sections[k].total,0);
+  if(totalQ > 0)
+    document.getElementById('global-score').textContent = `📊 ${totalScore}/${totalQ}`;
+}
+
+function buildTabs(){
+  const tabs=document.getElementById('tabs');
+  tabs.innerHTML='';
+  const labels={present:"⚡ Présent",imparfait:"🕰 Imparfait",passecompose:"📜 Passé composé",futurproche:"🔜 Futur proche",futur:"🔭 Futur simple",oral:"🎧 Oral"};
+  ORDRE.forEach(k=>{
+    const b=document.createElement('button');
+    const s=etat.sections[k];
+    b.className='tab-btn'+(k===etat.currentSection?' active':'');
+    b.dataset.tab=k;
+    if(!s.unlocked) b.classList.add('locked');
+    if(s.done) b.classList.add('done');
+    b.textContent=labels[k]+(s.done?' ✓':'');
+    b.addEventListener('click',()=>{
+      if(!etat.sections[k].unlocked){ toast('🔒 Completa la secció anterior primer!','ko'); return; }
+      switchTab(k);
+    });
+    tabs.appendChild(b);
+  });
+}
+
+function switchTab(key){
+  stopSectionTimer(etat.currentSection);
+  etat.currentSection = key;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===key));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===key));
+  if(key==='oral') buildOralUI();
+  if(!etat.sections[key].done) startSectionTimer(key);
+}
+
+/* ══════════════════════════════════════════
+   FICHE
+══════════════════════════════════════════ */
+function buildFiche(key){
+  const d=DATA[key];
+  return `<div class="fiche">
+    <div class="fiche-header" onclick="toggleFiche('${key}')">
+      <span class="fiche-title">📖 Fiche — ${d.titre}</span>
+      <span class="fiche-arrow" id="arrow-${key}">▼</span>
+    </div>
+    <div class="fiche-locked-msg" id="fiche-lock-${key}">🔒 Disponible après le premier essai</div>
+    <div class="fiche-body" id="fiche-${key}" style="display:none;">
+      <p>${d.theorie.resume}</p>
+      <p><b>Terminaisons :</b> ${d.theorie.terminaisons}</p>
+      <p><b>Exemple :</b> ${d.theorie.exemple}</p>
+    </div>
+  </div>`;
+}
+
+function toggleFiche(key){
+  // Lock fiche until first attempt
+  if(!etat.sections[key].attempted){
+    toast('📖 La fitxa es desbloqueja després del primer intent.','');
+    return;
+  }
+  const body=document.getElementById(`fiche-${key}`);
+  const arrow=document.getElementById(`arrow-${key}`);
+  const lock=document.getElementById(`fiche-lock-${key}`);
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'';
+  if(lock) lock.style.display='none';
+  arrow.textContent=open?'▼':'▲';
+}
+
+function unlockFiche(key){
+  etat.sections[key].attempted = true;
+  const lock=document.getElementById(`fiche-lock-${key}`);
+  if(lock) lock.textContent = '💡 Clica per veure / amagar la fitxa';
+}
+
+/* ══════════════════════════════════════════
+   PHRASES (ordre de mots)
+══════════════════════════════════════════ */
+const phraseState = {};
+
+function buildPhrases(key){
+  const data=DATA[key];
+  phraseState[key]=[];
+  const container=document.getElementById(`${key}-phrases`);
+  container.innerHTML='';
+  data.phrases.forEach((ph,i)=>{
+    phraseState[key][i]={pool:[...ph.mots,...ph.distracteurs].sort(()=>Math.random()-.5), answer:[]};
+    const div=document.createElement('div');
+    div.className='phrase-exo'; div.style.marginBottom='18px';
+    div.innerHTML=`<div class="words-pool" id="${key}-pool-${i}"></div>
+      <div class="drop-zone" id="${key}-drop-${i}" style="min-height:44px;margin-top:6px;"></div>
+      <div class="correction-hint" id="${key}-corr-${i}" style="display:none;"></div>`;
+    container.appendChild(div);
+    renderPhrase(key,i);
+  });
+  updateExoProgress(key);
+}
+
+function renderPhrase(key,i){
+  const s=phraseState[key][i];
+  const pool=document.getElementById(`${key}-pool-${i}`);
+  const drop=document.getElementById(`${key}-drop-${i}`);
+  const ph=DATA[key].phrases[i];
+  pool.innerHTML=''; drop.innerHTML='';
+  s.pool.forEach(w=>{
+    const b=document.createElement('button');
+    b.className='word-chip'+(ph.distracteurs.includes(w)?' distractor':'');
+    b.textContent=w;
+    b.addEventListener('click',()=>{ s.answer.push(w); s.pool.splice(s.pool.indexOf(w),1); renderPhrase(key,i); updateExoProgress(key); });
+    pool.appendChild(b);
+  });
+  s.answer.forEach((w,ai)=>{
+    const b=document.createElement('button');
+    b.className='word-chip';
+    b.textContent=w;
+    b.addEventListener('click',()=>{ s.pool.push(w); s.answer.splice(ai,1); renderPhrase(key,i); updateExoProgress(key); });
+    drop.appendChild(b);
+  });
+}
+
+/* ══════════════════════════════════════════
+   CONJUGACIÓ
+══════════════════════════════════════════ */
+const CONJUGAISONS = {
+  parler:  {present:"Je parle, tu parles, il parle, nous parlons, vous parlez, ils parlent.",imparfait:"Je parlais, tu parlais, il parlait, nous parlions, vous parliez, ils parlaient.",passecompose:"J'ai parlé, tu as parlé, il a parlé, nous avons parlé, vous avez parlé, ils ont parlé.",futurproche:"Je vais parler, tu vas parler, il va parler, nous allons parler, vous allez parler, ils vont parler.",futur:"Je parlerai, tu parleras, il parlera, nous parlerons, vous parlerez, ils parleront."},
+  finir:   {present:"Je finis, tu finis, il finit, nous finissons, vous finissez, ils finissent.",imparfait:"Je finissais, tu finissais, il finissait, nous finissions, vous finissiez, ils finissaient.",passecompose:"J'ai fini, tu as fini, il a fini, nous avons fini, vous avez fini, ils ont fini.",futurproche:"Je vais finir, tu vas finir, il va finir, nous allons finir, vous allez finir, ils vont finir.",futur:"Je finirai, tu finiras, il finira, nous finirons, vous finirez, ils finiront."},
+  être:    {present:"Je suis, tu es, il est, nous sommes, vous êtes, ils sont.",imparfait:"J'étais, tu étais, il était, nous étions, vous étiez, ils étaient.",passecompose:"J'ai été, tu as été, il a été, nous avons été, vous avez été, ils ont été.",futurproche:"Je vais être, tu vas être, il va être, nous allons être, vous allez être, ils vont être.",futur:"Je serai, tu seras, il sera, nous serons, vous serez, ils seront."},
+  avoir:   {present:"J'ai, tu as, il a, nous avons, vous avez, ils ont.",imparfait:"J'avais, tu avais, il avait, nous avions, vous aviez, ils avaient.",passecompose:"J'ai eu, tu as eu, il a eu, nous avons eu, vous avez eu, ils ont eu.",futurproche:"Je vais avoir, tu vas avoir, il va avoir, nous allons avoir, vous allez avoir, ils vont avoir.",futur:"J'aurai, tu auras, il aura, nous aurons, vous aurez, ils auront."},
+  aller:   {present:"Je vais, tu vas, il va, nous allons, vous allez, ils vont.",imparfait:"J'allais, tu allais, il allait, nous allions, vous alliez, ils allaient.",passecompose:"Je suis allé(e), tu es allé(e), il est allé, nous sommes allés, vous êtes allé(e)s, ils sont allés.",futurproche:"Je vais aller, tu vas aller, il va aller, nous allons aller, vous allez aller, ils vont aller.",futur:"J'irai, tu iras, il ira, nous irons, vous irez, ils iront."},
+  faire:   {present:"Je fais, tu fais, il fait, nous faisons, vous faites, ils font.",imparfait:"Je faisais, tu faisais, il faisait, nous faisions, vous faisiez, ils faisaient.",passecompose:"J'ai fait, tu as fait, il a fait, nous avons fait, vous avez fait, ils ont fait.",futurproche:"Je vais faire, tu vas faire, il va faire, nous allons faire, vous allez faire, ils vont faire.",futur:"Je ferai, tu feras, il fera, nous ferons, vous ferez, ils feront."}
+};
+
+function buildConj(key){
+  const data=DATA[key];
+  const container=document.getElementById(`${key}-conj`);
+  container.innerHTML='';
+  data.conj.forEach((c,i)=>{
+    const row=document.createElement('div');
+    row.className='conj-row';
+    row.innerHTML=`<label class="conj-label"><b>${c.pronom}</b> (${c.verbe})</label>
+      <button class="speak-btn" onclick="speakVerb('${c.verbe}','${key}')" title="Écouter la conjugaison">🔊</button>
+      <input class="conj-input" id="${key}-ci-${i}" type="text" autocomplete="off" spellcheck="false" placeholder="…">
+      <span class="conj-fb" id="${key}-cf-${i}"></span>`;
+    container.appendChild(row);
+  });
+}
+
+function speakVerb(verbe,temps){
+  const conj=CONJUGAISONS[verbe];
+  if(conj&&conj[temps]) speak(conj[temps], 0.76);
+  else speak(verbe);
+}
+
+/* ══════════════════════════════════════════
+   PROGRÉS PER EXERCICI
+══════════════════════════════════════════ */
+function updateExoProgress(key){
+  const d = DATA[key];
+  // Phrases completed: all words placed
+  const phraseDone = d.phrases.filter((_,i)=> phraseState[key] && phraseState[key][i] && phraseState[key][i].pool.length === d.phrases[i].distracteurs.length).length;
+  // Conj filled
+  const conjFilled = d.conj.filter((_,i)=>{ const inp=document.getElementById(`${key}-ci-${i}`); return inp && inp.value.trim().length>0; }).length;
+  // Redac words
+  const redacEl = document.getElementById(`${key}-redac`);
+  const wc = redacEl ? redacEl.value.trim().split(/\s+/).filter(Boolean).length : 0;
+
+  const p1 = document.getElementById(`${key}-prog1`);
+  const p2 = document.getElementById(`${key}-prog2`);
+  const p3 = document.getElementById(`${key}-prog3`);
+  if(p1) p1.innerHTML = `Frases: <span>${phraseDone}/${d.phrases.length}</span>`;
+  if(p2) p2.innerHTML = `Conjugació: <span>${conjFilled}/${d.conj.length}</span>`;
+  if(p3) {
+    p3.innerHTML = `Redacció: <span>${wc}/25 mots</span>`;
+    p3.className = 'exo-progress' + (wc>=25?' ok':'');
+  }
+}
+
+/* ══════════════════════════════════════════
+   BUILD SECTION
+══════════════════════════════════════════ */
+function buildSection(key){
+  const d=DATA[key];
+  const panels=document.getElementById('panels');
+  const div=document.createElement('div');
+  div.className='panel'+(key==='present'?' active':'');
+  div.dataset.panel=key;
+  div.innerHTML=`
+    <div class="section-label"><span class="section-num">${d.num}</span>${d.titre}</div>
+    <div class="section-timer-bar">
+      <span class="stimer-label">⏱ Temps secció</span>
+      <span class="stimer-clock" id="stimer-clock-${key}">15:00</span>
+      <div class="stimer-bar-wrap"><div class="stimer-bar-fill" id="stimer-fill-${key}" style="width:0%"></div></div>
+    </div>
+    ${buildFiche(key)}
+    <div class="exo">
+      <div class="exo-title">Exercice 1 — Remet les mots dans l'ordre</div>
+      <div class="consigne">Clique sur les mots pour former la phrase correcte. Pour annuler, reclique dans la zone verte.</div>
+      <div class="exo-progress" id="${key}-prog1">Frases: <span>0/${d.phrases.length}</span></div>
+      <div id="${key}-phrases"></div>
+    </div>
+    <div class="exo">
+      <div class="exo-title">Exercice 2 — Conjugue les verbes</div>
+      <div class="consigne">Écris la forme correcte (sans le pronom). Clique sur 🔊 pour écouter.</div>
+      <div class="exo-progress" id="${key}-prog2">Conjugació: <span>0/${d.conj.length}</span></div>
+      <div id="${key}-conj"></div>
+    </div>
+    <div class="exo">
+      <div class="exo-title">Exercice 3 — Rédaction libre</div>
+      <div class="consigne">${d.redacConsigne}</div>
+      <textarea id="${key}-redac" placeholder="${d.redacPlaceholder}"></textarea>
+      <div class="word-count exo-progress" id="${key}-prog3">0/25 mots</div>
+    </div>
+    <div class="actions">
+      <button class="btn-validate" onclick="valider('${key}')">Valider la section</button>
+      <button class="btn-hint" id="${key}-hintbtn" onclick="showHint('${key}')">💡 Indice</button>
+    </div>
+    <div class="hint-box" id="${key}-hint"></div>
+    <div class="resultat" id="${key}-result"></div>
+  `;
+  panels.appendChild(div);
+  buildPhrases(key);
+  buildConj(key);
+
+  // Word count + progress
+  const ta = document.getElementById(`${key}-redac`);
+  ta.addEventListener('input',()=>{
+    const wc = ta.value.trim().split(/\s+/).filter(Boolean).length;
+    const el = document.getElementById(`${key}-wc`);
+    if(el){ el.textContent=wc+' mot'+(wc>1?'s':''); el.className='word-count'+(wc>=25?' ok':''); }
+    updateExoProgress(key);
+  });
+
+  // Update conj progress on input
+  d.conj.forEach((_,i)=>{
+    const inp = document.getElementById(`${key}-ci-${i}`);
+    if(inp) inp.addEventListener('input',()=>updateExoProgress(key));
+  });
+}
+
+/* ══════════════════════════════════════════
+   NORMALITZAR
+══════════════════════════════════════════ */
+function normalize(s){
+  return s.toLowerCase().trim()
+    .replace(/[àâ]/g,'a').replace(/[éèêë]/g,'e').replace(/[îï]/g,'i')
+    .replace(/[ôö]/g,'o').replace(/[ùûü]/g,'u').replace(/ç/g,'c')
+    .replace(/œ/g,'oe').replace(/æ/g,'ae')
+    .replace(/['']/g,"'").replace(/\s+/g,' ');
+}
+
+/* ══════════════════════════════════════════
+   VALIDACIÓ
+══════════════════════════════════════════ */
+function valider(key){
+  const d=DATA[key];
+  unlockFiche(key);
+  let score=0, total=0;
+  const details=[];
+
+  // Ex1 — frases
+  d.phrases.forEach((ph,i)=>{
+    total++;
+    const ans=phraseState[key][i].answer.join(' ');
+    const corrDiv=document.getElementById(`${key}-corr-${i}`);
+    if(normalize(ans)===normalize(ph.correct)){
+      score++;
+      corrDiv.style.display='none';
+      details.push({label:`Frase ${i+1}`,ok:true});
+    } else {
+      corrDiv.style.display='block';
+      corrDiv.innerHTML=`✗ Correction : <b>${ph.correct}</b>`;
+      details.push({label:`Frase ${i+1}`,ok:false,info:ph.correct});
+    }
+  });
+
+  // Ex2 — conjugació
+  // Remove old hints
+  document.querySelectorAll(`#${key}-conj .correction-hint`).forEach(e=>e.remove());
+  d.conj.forEach((c,i)=>{
+    total++;
+    const inp=document.getElementById(`${key}-ci-${i}`);
+    const fb=document.getElementById(`${key}-cf-${i}`);
+    const val=inp.value.trim().toLowerCase().replace(/['']/g,"'");
+    const ok=c.rep.some(r=>normalize(val)===normalize(r));
+    inp.className='conj-input '+(ok?'ok':'ko');
+    fb.textContent=ok?'✓':'✗';
+    if(ok){
+      score++;
+      details.push({label:`Conj. ${c.pronom} (${c.verbe})`,ok:true});
+    } else {
+      const hint=document.createElement('div');
+      hint.className='correction-hint';
+      hint.innerHTML=`✗ <b>${c.rep[0]}</b> — <span class="fb-detail">${c.explication}</span>`;
+      inp.parentNode.insertBefore(hint, inp.nextSibling?.nextSibling || null);
+      details.push({label:`Conj. ${c.pronom} (${c.verbe})`,ok:false,info:c.rep[0],expl:c.explication});
+    }
+  });
+
+  // Ex3 — redacció
+  const redac=document.getElementById(`${key}-redac`).value.trim();
+  const wordCount=redac.split(/\s+/).filter(Boolean).length;
+  total++;
+  const redacOk = wordCount>=25;
+  if(redacOk) score++;
+  details.push({label:'Redacció (≥25 mots)',ok:redacOk,info:redacOk?`${wordCount} mots ✓`:`Només ${wordCount} mots — cal arribar a 25`});
+
+  // Guardar punts
+  etat.sections[key].score = score;
+  etat.sections[key].total = total;
+  updateGlobalScore();
+
+  const ratio=score/total;
+  const ok=ratio>=SEUIL;
+  const resEl=document.getElementById(`${key}-result`);
+  resEl.className='resultat '+(ok?'success':'fail');
+
+  // Detall de resultats
+  let detailHTML = details.map(d=>
+    `<div style="font-size:.82rem;font-weight:400;margin-top:3px;">${d.ok?'✓':'✗'} ${d.label}${d.info?' — <i>'+d.info+'</i>':''}${d.expl?' <span style="color:#888;font-size:.78rem;">('+d.expl+')</span>':''}</div>`
+  ).join('');
+
+  resEl.innerHTML = (ok
+    ? `✓ <b>${score}/${total}</b> (${Math.round(ratio*100)}%) — Section validée ! 🎉`
+    : `✗ <b>${score}/${total}</b> (${Math.round(ratio*100)}%) — Corrige et réessaie ! (seuil : ${Math.round(SEUIL*100)}%)`)
+    + detailHTML;
+  resEl.style.display='block';
+
+  if(ok){
+    soundOk();
+    stopSectionTimer(key);
+    etat.sections[key].done=true;
+    const idx=ORDRE.indexOf(key);
+    if(idx<ORDRE.length-1){
+      const next=ORDRE[idx+1];
+      if(!etat.sections[next].unlocked){
+        etat.sections[next].unlocked=true;
+        soundUnlock();
+        toast('🔓 '+next.charAt(0).toUpperCase()+next.slice(1)+' débloqué !','ok');
+      }
+    }
+    updateProgress();
+    buildTabs();
+    saveProgress();
+    if(["present","imparfait","passecompose","futurproche","futur"].every(k=>etat.sections[k].done)){
+      setTimeout(()=>showCongrats(),700);
+    }
+  } else {
+    soundKo();
+    toast('Corrige les erreurs et réessaie 💪','ko');
+  }
+  resEl.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ══════════════════════════════════════════
+   INDICI
+══════════════════════════════════════════ */
+function showHint(key){
+  const btn=document.getElementById(`${key}-hintbtn`);
+  const box=document.getElementById(`${key}-hint`);
+  if(etat.sections[key].hintUsed){ toast('Ja has usat l\'indici per aquesta secció.',''); return; }
+  etat.sections[key].hintUsed=true;
+  btn.disabled=true;
+  box.innerHTML='💡 '+DATA[key].indice;
+  box.classList.add('show');
+}
+
+/* ══════════════════════════════════════════
+   ORAL
+══════════════════════════════════════════ */
+let oralPlaying=false, oralSpeed=1.0, oralTranscriptOpen=false;
+
+function buildOralUI(){
+  const panels=document.getElementById('panels');
+  if(panels.querySelector('[data-panel="oral"]')) return;
+  const panel=document.createElement('div');
+  panel.className='panel';
+  panel.dataset.panel='oral';
+
+  const waveHTML=Array.from({length:30},(_,i)=>`<div class="oral-bar" style="height:${4+Math.sin(i*0.6)*14+Math.random()*10}px"></div>`).join('');
+  const qHTML=ORAL_QS.map(q=>`
+    <div class="oral-qcm" id="oqcm-${q.id}">
+      <div class="oral-q-text">${q.text}</div>
+      <div class="oral-opts">${q.opts.map((o,i)=>`<button class="oral-opt" onclick="selectOral('${q.id}',${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join('')}</div>
+      <div class="oral-fb" id="ofb-${q.id}"></div>
+    </div>`).join('');
+
+  const transcriptHTML=ORAL_PARAS.map(p=>`
+    <div class="para-label" style="color:${p.color}">${p.label}</div>
+    <p>${p.text}</p>`).join('');
+
+  panel.innerHTML=`
+    <div class="section-label"><span class="section-num" style="background:var(--sky)">🎧</span>Compréhension orale</div>
+    <div class="section-timer-bar">
+      <span class="stimer-label">⏱ Temps secció</span>
+      <span class="stimer-clock" id="stimer-clock-oral">15:00</span>
+      <div class="stimer-bar-wrap"><div class="stimer-bar-fill" id="stimer-fill-oral" style="width:0%"></div></div>
+    </div>
+    <div class="oral-player">
+      <h3>Lucas — La vie d'un lycéen</h3>
+      <div class="oral-wave" id="oralWave">${waveHTML}</div>
+      <div class="oral-controls">
+        <button class="oral-play-btn" id="oralPlayBtn" onclick="toggleOralPlay()">▶ Écouter</button>
+        <button class="oral-stop-btn" onclick="stopOral()">■ Arrêter</button>
+        <select class="oral-speed" id="oralSpeedSel" onchange="changeOralSpeed(this.value)">
+          <option value="0.65">🐢 Lent</option>
+          <option value="0.82">🚶 Modéré</option>
+          <option value="1.0" selected>🏃 Normal</option>
+        </select>
+      </div>
+      <p class="oral-tip">💡 Écoute deux ou trois fois avant de répondre.</p>
+    </div>
+    <div id="oralTranscriptWrap" style="margin-bottom:18px;">
+      <button class="oral-transcript-btn" id="oralTranscriptBtn" onclick="toggleOralTranscript()" disabled>
+        🔒 Transcription — disponible après le premier essai
+      </button>
+      <div id="oralTranscript" style="display:none;" class="oral-transcript">${transcriptHTML}</div>
+    </div>
+    <div class="exo">
+      <div class="exo-title">Questions de compréhension</div>
+      <div class="consigne">Réponds d'après ce que tu as entendu.</div>
+      ${qHTML}
+    </div>
+    <div class="actions">
+      <button class="btn-validate" onclick="validerOral()">Valider les réponses</button>
+      <button class="btn-hint" id="oralRetryBtn" style="display:none" onclick="resetOral()">↺ Réessayer</button>
+    </div>
+    <div class="resultat" id="oral-result"></div>
+  `;
+  panels.appendChild(panel);
+  startSectionTimer('oral');
+}
+
+function selectOral(qId,idx){
+  etat.oralAnswers[qId]=idx;
+  ORAL_QS.find(q=>q.id===qId).opts.forEach((_,i)=>{
+    document.querySelectorAll(`#oqcm-${qId} .oral-opt`)[i].className='oral-opt'+(i===idx?' sel':'');
+  });
+}
+
+function toggleOralPlay(){
+  if(!('speechSynthesis' in window)){ toast('⚠ Synthèse vocale non disponible.','ko'); return; }
+  if(oralPlaying){ speechSynthesis.pause(); oralPlaying=false; document.getElementById('oralPlayBtn').textContent='▶ Reprendre'; document.getElementById('oralWave').classList.remove('playing'); }
+  else if(speechSynthesis.paused){ speechSynthesis.resume(); oralPlaying=true; document.getElementById('oralPlayBtn').textContent='⏸ Pause'; document.getElementById('oralWave').classList.add('playing'); }
+  else { startOralSpeech(); }
+}
+
+function startOralSpeech(){
+  speechSynthesis.cancel();
+  const fullText=ORAL_PARAS.map(p=>p.text).join(' ');
+  const sentences=fullText.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const setPlay=p=>{ oralPlaying=p; const btn=document.getElementById('oralPlayBtn'),wf=document.getElementById('oralWave'); if(btn)btn.textContent=p?'⏸ Pause':'▶ Réécouter'; if(wf)wf.classList.toggle('playing',p); };
+  sentences.forEach((s,i)=>{
+    const u=new SpeechSynthesisUtterance(s);
+    u.lang='fr-FR'; u.rate=oralSpeed; u.pitch=1.02;
+    if(bestVoice) u.voice=bestVoice;
+    if(i===0) u.onstart=()=>setPlay(true);
+    if(i===sentences.length-1){ u.onend=()=>setPlay(false); u.onerror=()=>setPlay(false); }
+    speechSynthesis.speak(u);
+  });
+}
+
+function stopOral(){ speechSynthesis.cancel(); oralPlaying=false; const btn=document.getElementById('oralPlayBtn'); if(btn) btn.textContent='▶ Écouter'; document.getElementById('oralWave')?.classList.remove('playing'); }
+function changeOralSpeed(v){ oralSpeed=parseFloat(v); if(oralPlaying){stopOral();setTimeout(startOralSpeech,150);} }
+
+function toggleOralTranscript(){
+  const div=document.getElementById('oralTranscript');
+  const btn=document.getElementById('oralTranscriptBtn');
+  oralTranscriptOpen=!oralTranscriptOpen;
+  div.style.display=oralTranscriptOpen?'block':'none';
+  btn.textContent=oralTranscriptOpen?'📄 Masquer la transcription':'📄 Afficher la transcription';
+}
+
+function validerOral(){
+  etat.oralAttempted=true;
+  const tb=document.getElementById('oralTranscriptBtn');
+  if(tb){ tb.disabled=false; tb.style.opacity=''; tb.style.cursor=''; tb.textContent='📄 Afficher la transcription'; }
+  let score=0;
+  ORAL_QS.forEach(q=>{
+    const fb=document.getElementById(`ofb-${q.id}`);
+    const ans=etat.oralAnswers[q.id];
+    const ok=ans===q.correct;
+    const opts=document.querySelectorAll(`#oqcm-${q.id} .oral-opt`);
+    opts.forEach((o,i)=>o.className='oral-opt'+(i===q.correct?' ok':i===ans&&!ok?' ko':''));
+    if(fb) { fb.className='oral-fb '+(ok?'ok':'ko'); fb.textContent=ok?`✓ Correct !`:`✗ Resposta correcta : ${String.fromCharCode(65+q.correct)}. ${q.opts[q.correct]} — ${q.explication}`; }
+    if(ok) score++;
+  });
+  const total=ORAL_QS.length, ratio=score/total;
+  etat.sections.oral.score=score; etat.sections.oral.total=total;
+  updateGlobalScore();
+  const res=document.getElementById('oral-result');
+  res.className='resultat '+(ratio>=0.5?'success':'fail');
+  res.innerHTML=ratio>=0.5?`✓ ${score}/${total} (${Math.round(ratio*100)}%) — Excellent travail ! 🎉`:`✗ ${score}/${total} — Réécoute et réessaie !`;
+  res.style.display='block';
+  document.getElementById('oralRetryBtn').style.display='inline-block';
+  if(ratio>=0.5){ soundOk(); etat.sections.oral.done=true; stopSectionTimer('oral'); buildTabs(); saveProgress(); }
+  else soundKo();
+  if(!oralTranscriptOpen) toggleOralTranscript();
+  res.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function resetOral(){
+  etat.oralAnswers={};
+  ORAL_QS.forEach(q=>{
+    const fb=document.getElementById(`ofb-${q.id}`);
+    if(fb){fb.className='oral-fb';fb.textContent='';}
+    document.querySelectorAll(`#oqcm-${q.id} .oral-opt`).forEach(o=>o.className='oral-opt');
+  });
+  const res=document.getElementById('oral-result');
+  if(res){res.className='resultat';res.style.display='none';}
+  document.getElementById('oralRetryBtn').style.display='none';
+}
+
+/* ══════════════════════════════════════════
+   FÉLICITATIONS + RESUM
+══════════════════════════════════════════ */
+function showCongrats(){
+  const keys=["present","imparfait","passecompose","futurproche","futur"];
+  const labels={present:"Présent",imparfait:"Imparfait",passecompose:"Passé composé",futurproche:"Futur proche",futur:"Futur simple"};
+  const totalScore=keys.reduce((a,k)=>a+etat.sections[k].score,0);
+  const totalQ=keys.reduce((a,k)=>a+etat.sections[k].total,0);
+  const pct=Math.round(totalScore/totalQ*100);
+
+  const rowsHTML=keys.map(k=>{
+    const s=etat.sections[k];
+    const p=s.total>0?Math.round(s.score/s.total*100):0;
+    const mins=Math.floor(s.timeSpent/60), secs=s.timeSpent%60;
+    const timeStr=mins+'m '+secs.toString().padStart(2,'0')+'s';
+    return `<tr>
+      <td>${labels[k]}</td>
+      <td class="${p>=70?'ok-cell':'ko-cell'}">${s.score}/${s.total} (${p}%)</td>
+      <td>${timeStr}</td>
+      <td>${s.hintUsed?'Sí':'No'}</td>
+    </tr>`;
+  }).join('');
+
+  const totalMins=Math.floor(etat.globalSeconds/60);
+  const totalSecs=etat.globalSeconds%60;
+
+  const panels=document.getElementById('panels');
+  const c=document.createElement('div');
+  c.className='congrats';
+  c.innerHTML=`
+    <h2>🎉 Félicitations !</h2>
+    <div class="medals">${pct>=90?'⭐⭐⭐⭐⭐':pct>=70?'⭐⭐⭐⭐':'⭐⭐⭐'}</div>
+    <p><b>${studentNom} ${studentCognom}</b> — ${pct}% global</p>
+    <table class="summary-table">
+      <thead><tr><th>Secció</th><th>Nota</th><th>Temps</th><th>Indici usat</th></tr></thead>
+      <tbody>${rowsHTML}</tbody>
+    </table>
+    <p class="summary-global">Temps total: ${totalMins}m ${totalSecs.toString().padStart(2,'0')}s</p>
+    <p style="margin-top:8px;opacity:.8;font-size:.85rem;">Va maintenant dans l'onglet <b>🎧 Oral</b> pour le bonus !</p>
+    <br>
+    <button class="btn-pdf" onclick="descarregarPDF()">📄 Descarregar PDF per entregar</button>
+  `;
+  panels.appendChild(c);
+  c.scrollIntoView({behavior:'smooth',block:'center'});
+  soundUnlock();
+}
+
+/* ══════════════════════════════════════════
+   PDF
+══════════════════════════════════════════ */
+function descarregarPDF(){
+  window.print();
+}
+
+/* ══════════════════════════════════════════
+   NO COPY/PASTE
+══════════════════════════════════════════ */
+document.addEventListener('paste', e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+    e.preventDefault();
+    toast('❌ No es pot enganxar — escriu la resposta tu mateix/a.','ko');
+  }
+});
+document.addEventListener('copy', e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') e.preventDefault();
+});
+document.addEventListener('contextmenu', e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') e.preventDefault();
+});
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+function init(){
+  const keys=["present","imparfait","passecompose","futurproche","futur"];
+  keys.forEach(buildSection);
+  buildTabs();
+  updateProgress();
+  setupAccentBar();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
